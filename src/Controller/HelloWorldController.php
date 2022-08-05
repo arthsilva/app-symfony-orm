@@ -10,9 +10,7 @@ use Symfony\Component\Routing\Annotation\Route;
 class HelloWorldController
 {
     //annotation para setar a rota para acessar esta action
-    /**
-     * @Route("/hello")
-     */
+    #[Route('/hello', methods:['GET'])]
     public function helloWorldAction(Request $request): Response
     {
         //$request->attributes->get('nomeDoParametro'); busca um parâmetro definido na URL da rota
