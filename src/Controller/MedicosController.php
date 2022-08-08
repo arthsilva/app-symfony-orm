@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Medico;
+use App\Helper\MedicoFactory;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -16,11 +17,16 @@ class MedicosController
      * @param EntityManagerInterface $entityManager
      */
     private EntityManagerInterface $entityManager;
+    private MedicoFactory $medicoFactory;
 
-    public function __construct(EntityManagerInterface $entityManager)
+    public function __construct(
+        EntityManagerInterface $entityManager,
+        MedicoFactory $medicoFactory //se preciso de uma classe externa, peço ela por injeção de dependência
+    )
     {
         //inicializa o gerenciado de entidades do Doctrine
         $this->entityManager = $entityManager;
+        $this->medicoFactory = $medicoFactory;
     }
 
     #[Route('/medicos', methods: ['POST'])]
@@ -29,10 +35,7 @@ class MedicosController
         //retorna uma string contendo o corpo da requisição
         $corpoRequisicao = $request->getContent();
         //mapeia e retorna o valor como objeto
-        $dadoJson = json_decode($corpoRequisicao);
-        $medico = new Medico();
-        $medico->crm = $dadoJson->crm;
-        $medico->nome = $dadoJson->nome;
+        $medico = $this->medicoFactory->criarMedico($corpoRequisicao);
 
         $this->entityManager->persist($medico);
         $this->entityManager->flush();
@@ -55,8 +58,7 @@ class MedicosController
     #[Route('/medicos/{id}', methods: ['GET'])]
     public function buscarMedico(int $id): Response
     {
-        $repositorioMedicos = $this->entityManager->getRepository(Medico::class);
-        $medico = $repositorioMedicos->find($id);
+        $medico = $this->buscaMedico($id);
 
         $codigoRetorno = is_null($medico) ? Response::HTTP_NO_CONTENT : 200;
 
@@ -67,15 +69,10 @@ class MedicosController
     public function atualiza(int $id, Request $request): Response
     {
         $corpoRequisicao = $request->getContent();
-        $dadoJson = json_decode($corpoRequisicao);
-
-        $medicoEnviado = new Medico();
-        $medicoEnviado->crm = $dadoJson->crm;
-        $medicoEnviado->nome = $dadoJson->nome;
+        $medicoEnviado = $this->medicoFactory->criarMedico($corpoRequisicao);
 
         //buscar o medico para fazer alterações
-        $repositorioMedicos = $this->entityManager->getRepository(Medico::class);
-        $medicoExistente = $repositorioMedicos->find($id);
+        $medicoExistente = $this->buscaMedico($id);
 
         if (is_null($medicoExistente)) {
             //retorna um erro
@@ -89,5 +86,16 @@ class MedicosController
 
         //o que vou receber, vou devolver
         return new JsonResponse($medicoExistente);
+    }
+
+    /**
+     * @param int $id
+     * @return object|null
+     */
+    public function buscaMedico(int $id): mixed
+    {
+        $repositorioMedicos = $this->entityManager->getRepository(Medico::class);
+        $medico = $repositorioMedicos->find($id);
+        return $medico;
     }
 }
