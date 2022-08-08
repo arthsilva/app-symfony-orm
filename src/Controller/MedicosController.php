@@ -71,7 +71,7 @@ class MedicosController
         $corpoRequisicao = $request->getContent();
         $medicoEnviado = $this->medicoFactory->criarMedico($corpoRequisicao);
 
-        //buscar o medico para fazer alterações
+        //buscar o médico para fazer alterações
         $medicoExistente = $this->buscaMedico($id);
 
         if (is_null($medicoExistente)) {
@@ -79,8 +79,9 @@ class MedicosController
             return new Response('', Response::HTTP_NOT_FOUND);
         }
 
-        $medicoExistente->crm = $medicoEnviado->crm;
-        $medicoExistente->nome = $medicoEnviado->nome;
+        $medicoExistente
+            ->setCrm($medicoEnviado->getCrm())
+            ->setNome($medicoEnviado->getNome());
 
         $this->entityManager->flush();
 
@@ -89,7 +90,7 @@ class MedicosController
     }
 
     #[Route('/medicos/{id}', methods: ['DELETE'])]
-    public function remove( int $id): Response
+    public function remove(int $id): Response
     {
         $medico = $this->buscaMedico($id);
         $this->entityManager->remove($medico);
