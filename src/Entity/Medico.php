@@ -2,20 +2,35 @@
 
 namespace App\Entity;
 
-use Doctrine\ORM\Mapping\Column;
-use Doctrine\ORM\Mapping\Entity;
-use Doctrine\ORM\Mapping\GeneratedValue;
-use Doctrine\ORM\Mapping\Id;
+use Doctrine\ORM\Mapping as ORM;
 
-#[Entity]
+#[ORM\Entity]
 class Medico
 {
-    #[Id, GeneratedValue, Column]
+    #[ORM\Id,
+    ORM\GeneratedValue,
+    ORM\Column]
     public int $id;
 
-    #[Column]
+    #[ORM\Column]
     public int $crm;
 
-    #[Column]
+    #[ORM\Column]
     public string $nome;
+
+    #[ORM\ManyToOne]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?Especialidade $especialidade = null;
+
+    public function getEspecialidade(): ?Especialidade
+    {
+        return $this->especialidade;
+    }
+
+    public function setEspecialidade(?Especialidade $especialidade): self
+    {
+        $this->especialidade = $especialidade;
+
+        return $this;
+    }
 }
