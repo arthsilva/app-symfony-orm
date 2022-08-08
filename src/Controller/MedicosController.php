@@ -53,14 +53,41 @@ class MedicosController
     }
 
     #[Route('/medicos/{id}', methods: ['GET'])]
-    public function busrcarMedico(Request $request): Response
+    public function buscarMedico(int $id): Response
     {
-        $id = $request->get('id');
         $repositorioMedicos = $this->entityManager->getRepository(Medico::class);
         $medico = $repositorioMedicos->find($id);
 
         $codigoRetorno = is_null($medico) ? Response::HTTP_NO_CONTENT : 200;
 
         return new JsonResponse($medico, $codigoRetorno);
+    }
+
+    #[Route('/medicos/{id}', methods: ['PUT'])]
+    public function atualiza(int $id, Request $request): Response
+    {
+        $corpoRequisicao = $request->getContent();
+        $dadoJson = json_decode($corpoRequisicao);
+
+        $medicoEnviado = new Medico();
+        $medicoEnviado->crm = $dadoJson->crm;
+        $medicoEnviado->nome = $dadoJson->nome;
+
+        //buscar o medico para fazer alterações
+        $repositorioMedicos = $this->entityManager->getRepository(Medico::class);
+        $medicoExistente = $repositorioMedicos->find($id);
+
+        if (is_null($medicoExistente)) {
+            //retorna um erro
+            return new Response('', Response::HTTP_NOT_FOUND);
+        }
+
+        $medicoExistente->crm = $medicoEnviado->crm;
+        $medicoExistente->nome = $medicoEnviado->nome;
+
+        $this->entityManager->flush();
+
+        //o que vou receber, vou devolver
+        return new JsonResponse($medicoExistente);
     }
 }
